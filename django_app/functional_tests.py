@@ -65,6 +65,6 @@ class NewVisitorTest(unittest.TestCase):
 # 이것은 자동으로 파일 내 테스트 클래스와 메소드를 찾아서 실행해 주는 역할을 한다.
 if __name__ == '__main__':
 
-    # warnings = 'ignore'는 테스트 작성 시에 발생하는 불필요한 리소스 경고를 제거하기 윟나 것이다
+    # warnings = 'ignore'는 테스트 작성 시에 발생하는 불필요한 리소스 경고를 제거하기 위한 것이다
     # 이 부분을 읽을 때쯤이면 이미 리소스 경고 문제가 발생하지 않기 때문에 삭제해도 상관없다.
     unittest.main(warnings='ignore')
