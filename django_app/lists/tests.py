@@ -19,22 +19,6 @@ class HomePageTest(TestCase):
         found = resolve('/')
         self.assertEqual(found.func, home_page)
 
-    # def test_home_page_returns_correct_html(self):
-        # HttpRequest객체를 생성해서 사용자가 어떤 요청을 브라우저에 보내는지 확인한다
-        # request = HttpRequest()
-        # 이것을 home_page 뷰에 전달해서 응답을 취득한다 이 객체는 HttpResponse라는 클래스의 인스턴스다
-        # 응답내용(HTML 형태로 사용자에게 보내는 것)이 특정 속성을 가지고 있는지 확인한다.
-        # response = home_page(request)
-        # 그 다음은 응답내용이 <html>으로 시작하고 </html>으로 끝나는지 확인한다.
-        # response.content는 byte형 데이터로 파이썬 문자열이 아니다. 따라서 b''구문을 사용해서 비교한다.
-        # 자세한 내용은 Django페이지의 Porting to Python3자료를 참고
-        # https://docs.djangoproject.com/en/1.11/topics/python3/
-        # self.assertTrue(response.content.startswith(b'<html>'))
-        # 반환내용의 <title>태그에 "To-Do lists"라는 단어가 있는지 확인한다
-        # 앞선 기능 테스트에서 확인한것이기 때문에 단위테스트도 확인해주어야 한다.
-        # self.assertIn(b'<title>To-Do lists</title>', response.content)
-        # self.assertTrue(response.content.strip().endswith(b'</html>'))
-
     def test_home_page_returns_correct_html(self):
         request = HttpRequest()
         response = home_page(request)
@@ -51,20 +35,54 @@ class HomePageTest(TestCase):
 
         response = home_page(request)
 
-        self.assertIn('A new list item', response.content.decode())
-        expected_html = render_to_string(
-            'home.html',
-            {
-                'new_item_text': 'A new list item',
-            }
-        )
-        self.assertEqual(
-            re.sub(self.pattern_input_csrf, '', response.content.decode()),
-            re.sub(self.pattern_input_csrf, '', expected_html)
-        )
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, 'A new list item')
+
+    def test_home_page_redirects_after_POST(self):
+        request = HttpRequest()
+        request.method = 'POST'
+        request.POST['item_text'] = 'A new list item'
+
+        response = home_page(request)
+        # self.assertIn('A new list item', response.content.decode())
+        # expected_html = render_to_string(
+        #     'home.html',
+        #     {
+        #         'new_item_text': 'A new list item',
+        #     }
+        # )
+
+        # self.assertEqual(
+        #     re.sub(self.pattern_input_csrf, '', response.content.decode()),
+        #     re.sub(self.pattern_input_csrf, '', expected_html)
+        # )
+
+        # self.assertEqual(
+        #     re.sub(self.pattern_input_csrf, '', response.status_code, 302),
+        #     re.sub(self.pattern_input_csrf, '', response['location'], '/')
+        # )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['location'], '/')
+
+    def test_home_page_only_saves_items_when_necessary(self):
+        request = HttpRequest()
+        home_page(request)
+        self.assertEqual(Item.objects.count(), 0)
+
+    def test_home_page_displays_all_list_items(self):
+        Item.objects.create(text='itemey 1')
+        Item.objects.create(text='itemey 2')
+
+        request = HttpRequest()
+        response = home_page(request)
+
+        self.assertIn('itemey 1', response.content.decode())
+        self.assertIn('itemey 2', response.content.decode())
+
 
 class ItemModelTest(TestCase):
-
     def test_saving_and_retrieving_items(self):
         first_item = Item()
         first_item.text = 'The first (ever) list item'
