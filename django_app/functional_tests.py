@@ -1,3 +1,4 @@
+import time
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import unittest
@@ -35,44 +36,26 @@ class NewVisitorTest(unittest.TestCase):
         header_text = self.browser.find_element_by_tag_name('h1').text
         self.assertIn('To-Do', header_text)
 
-        # 그녀는 바로 작업을 추가하기로 한다.
+        # (에디스는 매우 체계적인 사람이다)
         inputbox = self.browser.find_element_by_id('id_new_item')
-        self.assertEqual(
-            inputbox.get_attribute('placeholder'),
-            'Enter a to-do item'
-        )
-
-        # "Buy peacock feathers(공작깃털 사기)"라고 텍스트 상자에 입력한다
-        # (에디스의 취미는 날치잡이용 그물을 만드는 것이다)
-        inputbox.send_keys('Buy peacock feathers')
-
-        # 엔터키를 치면 페이지가 갱신되고 작업목록에
-        # "1: Buy peacock feathers(공작깃털 사기)" 아이템이 추가된다
+        inputbox.send_keys('Use peacock feathers to make a fly')
         inputbox.send_keys(Keys.ENTER)
 
-        table = self.browser.find_element_by_id('id_list_table')
+        # 페이지는 다시 갱신되고, 두개 아이템이 목록에 보인다
+        table = self.browser.find_elements_by_id('id_list_table')
         rows = table.find_elements_by_tag_name('tr')
-        self.assertTrue(
-            any(row.text == '1: Buy peacock feathers' for row in rows),
-            "New to-do item did not appear in table(신규작업이 테이블에 표시되지 않는다)"
+        self.assertIn('1: Buy peacock feathers', [row.text for row in rows])
+        self.assertIn(
+            '2: Use peacock feathers to make a fly',
+            [row.text for row in rows]
         )
 
-        # 추가 아이템을 입력할 수 있는 여분의 텍스트 상자가 존재한다
-        # 다시 "Use peacock feathers to make a fly(공작깃털을 이용해서 그물 만들기)"라고 입력한다
-        # (에디스는 매우 체계적인 사람이다)
-        # self.fail은 강제적으로 테스트 실패를 발생시켜서 에러 메시지를 출력한다.
-        # 필자는 테스트가 끝났다는 것을 알리기 위해 사용하고 있다.
+        # 에디스는 사이트가 입력한 목록을 저장하고 있는지 궁금하다
+        # 사이트는 그녀를 위한 특정 URL을 생성해준다
+        # 이 때 URL에 대한 설명도 함께 제공된다
         self.fail('Finish the test!')
 
-        # 페이지는 다시 갱신되고, 두개 아이템이 목록에 보인다
-        # 에디스는 사이트가 입력한 목록을 저장하고 있는지 궁금하다
-        # 사이트는 그녀를 위한 특정 URL을 생성해 준다
-        # 이 때 URL에 대한 설명도 함께 제공된다
-
-        # 해당 URL에 접속하면 그녀가 만든 작업 목록이 그대로 있는 것을 확인할 수 있다
-
         # 만족하고 잠자리에 든다
-
 
 # 마지막은 if __name__ == '__main__'부분이다(파이썬 스크립트가 다른 스크립트에 임포트된 것이 아니라
 # 커맨드라인을 통해 실행됐다는 것을 확인하는 코드다.
