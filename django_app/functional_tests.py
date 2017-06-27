@@ -17,6 +17,11 @@ class NewVisitorTest(unittest.TestCase):
     def tearDown(self):
         self.browser.quit()
 
+    def check_for_row_in_list_table(self, row_text):
+        table = self.browser.find_elements_by_id('id_list_table')
+        rows = table.find_elements_by_tag_name('tr')
+        self.assertIn(row_text, [row.text for row in rows])
+
     # 테스트 메인 코드는 test_can_start_a_list_and_retrieve_it_later라는 메소드다.
     # test라는 명칭으로 시작하는 모든 메소드는 테스트메소드이며 테스트 실행자에 의해 실행된다
     # 클래스당 하나 이상의 테스트 메소드를 작성할 수 있다
@@ -36,19 +41,24 @@ class NewVisitorTest(unittest.TestCase):
         header_text = self.browser.find_element_by_tag_name('h1').text
         self.assertIn('To-Do', header_text)
 
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        self.assertEqual(
+            inputbox.get_attribute('placeholder'),
+            'Enter a to-do item'
+        )
+
+        # 엔터키를 치면 페이지가 갱신되고 작업목록에
+        # "1: 공작깃털사기"아이템이 추가된다
+        inputbox.send_keys(Keys.ENTER)
+        self.check_for_row_in_list_table('1: Buy peacock feathers')
         # (에디스는 매우 체계적인 사람이다)
         inputbox = self.browser.find_element_by_id('id_new_item')
         inputbox.send_keys('Use peacock feathers to make a fly')
         inputbox.send_keys(Keys.ENTER)
 
         # 페이지는 다시 갱신되고, 두개 아이템이 목록에 보인다
-        table = self.browser.find_elements_by_id('id_list_table')
-        rows = table.find_elements_by_tag_name('tr')
-        self.assertIn('1: Buy peacock feathers', [row.text for row in rows])
-        self.assertIn(
-            '2: Use peacock feathers to make a fly',
-            [row.text for row in rows]
-        )
+        self.check_for_row_in_list_table('1: Buy peacock feathers')
+        self.check_for_row_in_list_table('2: Use peacock feathers to make a fly')
 
         # 에디스는 사이트가 입력한 목록을 저장하고 있는지 궁금하다
         # 사이트는 그녀를 위한 특정 URL을 생성해준다
@@ -56,6 +66,7 @@ class NewVisitorTest(unittest.TestCase):
         self.fail('Finish the test!')
 
         # 만족하고 잠자리에 든다
+
 
 # 마지막은 if __name__ == '__main__'부분이다(파이썬 스크립트가 다른 스크립트에 임포트된 것이 아니라
 # 커맨드라인을 통해 실행됐다는 것을 확인하는 코드다.
