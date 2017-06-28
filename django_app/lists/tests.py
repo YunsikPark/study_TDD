@@ -1,10 +1,11 @@
 import re
+
 from django.core.urlresolvers import resolve
 from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.test import TestCase
-from lists.models import Item
 
+from lists.models import Item
 # home_page는 어떤 함수일까 곧 작성하게 될 뷰 함수로 HTML을 반환한다.
 # import 처리부분을 보면 알 수 있지만 이 함수를 lists/view.py파일에 저장할 계획이다.
 from lists.views import home_page
@@ -45,41 +46,14 @@ class HomePageTest(TestCase):
         request.POST['item_text'] = 'A new list item'
 
         response = home_page(request)
-        # self.assertIn('A new list item', response.content.decode())
-        # expected_html = render_to_string(
-        #     'home.html',
-        #     {
-        #         'new_item_text': 'A new list item',
-        #     }
-        # )
-
-        # self.assertEqual(
-        #     re.sub(self.pattern_input_csrf, '', response.content.decode()),
-        #     re.sub(self.pattern_input_csrf, '', expected_html)
-        # )
-
-        # self.assertEqual(
-        #     re.sub(self.pattern_input_csrf, '', response.status_code, 302),
-        #     re.sub(self.pattern_input_csrf, '', response['location'], '/')
-        # )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['location'], '/')
+        self.assertEqual(response['location'], '/lists/the-only-list-in-the-world/')
 
     def test_home_page_only_saves_items_when_necessary(self):
         request = HttpRequest()
         home_page(request)
         self.assertEqual(Item.objects.count(), 0)
-
-    def test_home_page_displays_all_list_items(self):
-        Item.objects.create(text='itemey 1')
-        Item.objects.create(text='itemey 2')
-
-        request = HttpRequest()
-        response = home_page(request)
-
-        self.assertIn('itemey 1', response.content.decode())
-        self.assertIn('itemey 2', response.content.decode())
 
 
 class ItemModelTest(TestCase):
@@ -99,3 +73,18 @@ class ItemModelTest(TestCase):
         second_saved_item = saved_items[1]
         self.assertEqual(first_saved_item.text, 'The first (ever) list item')
         self.assertEqual(second_saved_item.text, 'Item the second')
+
+
+class LiveViewTest(TestCase):
+    def test_uses_list_template(self):
+        response = self.client.get('/lists/the-only-list-in-the-world/')
+        self.assertTemplateUsed(response, 'list.html')
+
+    def test_displays_all_items(self):
+        Item.objects.create(text='itemey 1')
+        Item.objects.create(text='itemey 2')
+
+        response = self.client.get('/lists/the-only-list-in-the-world/')
+
+        self.assertContains(response, 'itemey 1')
+        self.assertContains(response, 'itemey 2')
