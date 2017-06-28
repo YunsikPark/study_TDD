@@ -50,6 +50,8 @@ class NewVisitorTest(LiveServerTestCase):
         # 엔터키를 치면 페이지가 갱신되고 작업목록에
         # "1: 공작깃털사기"아이템이 추가된다
         inputbox.send_keys(Keys.ENTER)
+        edith_list_url = self.browser.current_url
+        self.assertRegex(edith_list_url, '/lists/.+')
         self.check_for_row_in_list_table('1: Buy peacock feathers')
         # (에디스는 매우 체계적인 사람이다)
         inputbox = self.browser.find_element_by_id('id_new_item')
@@ -60,18 +62,33 @@ class NewVisitorTest(LiveServerTestCase):
         self.check_for_row_in_list_table('2: Use peacock feathers to make a fly')
         self.check_for_row_in_list_table('1: Buy peacock feathers')
 
-        # 에디스는 사이트가 입력한 목록을 저장하고 있는지 궁금하다
-        # 사이트는 그녀를 위한 특정 URL을 생성해준다
-        # 이 때 URL에 대한 설명도 함께 제공된다
-        self.fail('Finish the test!')
+        # 새로운 사용자인 프란시스가 사이트에 접속한다
 
-        # 만족하고 잠자리에 든다
+        ## 새로운 브라우저 세션을 이용해서 에디스의 정보가
+        ## 쿠키를 통해 유입되는 것을 방지한다
+        self.browser.quit()
+        self.browser = webdriver.Chrome()
 
-    # 마지막은 if __name__ == '__main__'부분이다(파이썬 스크립트가 다른 스크립트에 임포트된 것이 아니라
-    # 커맨드라인을 통해 실행됐다는 것을 확인하는 코드다.
-    # unittest.main()을 호출해서 unittest 테스트 실행자를 가동한다.
-    # 이것은 자동으로 파일 내 테스트 클래스와 메소드를 찾아서 실행해 주는 역할을 한다.
-    # if __name__ == '__main__':
-    # warnings = 'ignore'는 테스트 작성 시에 발생하는 불필요한 리소스 경고를 제거하기 위한 것이다
-    # 이 부분을 읽을 때쯤이면 이미 리소스 경고 문제가 발생하지 않기 때문에 삭제해도 상관없다.
-    # unittest.main(warnings='ignore')
+        # 프란시스가 홈페이지에 접속한다
+        # 에디서의 리스트는 보이지 않는다
+        self.browser.get(self.live_server_url)
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertNotIn('make a fly', page_text)
+
+        # 프란시스가 새로운 작업 아이템을 입력하기 시작한다
+        # 그는 에디스보다 재미가 없다
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        inputbox.send_keys('Buy milk')
+        inputbox.send_keys(Keys.ENTER)
+
+        # 프란시스가 전용 URL을 취득한다
+        francis_list_url = self.browser.current_url
+        self.assertRegex(francis_list_url, '/lists/.+')
+        self.assertNotEqual(francis_list_url, edith_list_url)
+
+        # 에디스가 임력한 흔적이 없다는 것을 다시 확인한다
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertIn('Buy milk', page_text)
+
+        # 둘 다 만족하고 잠자리에 든다
